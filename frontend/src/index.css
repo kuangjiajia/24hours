@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  background-color: #FDFBF7;
+  color: #0F0F0F;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for the Neo-Pop aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #E6E6E6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0F0F0F;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
+
+/* Sticker effect utility */
+.sticker {
+  position: relative;
+  display: inline-block;
+  padding: 4px 12px;
+  background: white;
+  border: 2px solid #0F0F0F;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  transform: rotate(-2deg);
+  box-shadow: 2px 2px 0 #0F0F0F;
+}
+
+.sticker-yellow {
+  background: #FFD550;
+}
+
+.sticker-rotate-right {
+  transform: rotate(2deg);
+}
+
+/* Bento card hover effect */
+.bento-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bento-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress bar animation */
+.progress-bar {
+  background: linear-gradient(90deg, #FFD550, #FFC107);
+  transition: width 0.5s ease-out;
+}
+
+/* Marquee animation */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee-text {
+  display: inline-block;
+  animation: marquee 20s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Entry motion utilities */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.45s ease-out both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out both;
+}
+
+.animate-in {
+  animation: fade-in 0.2s ease-out both, zoom-in 0.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-in {
+    animation: none;
+  }
+}
+
+/* Selection color */
+::selection {
+  background: #FFD550;
+  color: #0F0F0F;
+}
+
+/* Focus states */
+input:focus,
+button:focus {
+  outline: 2px solid #FFD550;
+  outline-offset: 2px;
+}
+
+/* Pixel art style effect for icons */
+.pixel-icon {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}

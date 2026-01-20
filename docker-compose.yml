@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  task-automation:
+    build: .
+    restart: always
+    environment:
+      - LINEAR_API_KEY=${LINEAR_API_KEY}
+      - LINEAR_TEAM_ID=${LINEAR_TEAM_ID}
+      - LINEAR_WORKSPACE=${LINEAR_WORKSPACE}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POLLING_INTERVAL=${POLLING_INTERVAL:-30000}
+      - TASK_TIMEOUT=${TASK_TIMEOUT:-10800000}
+      - MAX_CONCURRENT_TASKS=${MAX_CONCURRENT_TASKS:-3}
+    depends_on:
+      - redis
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./logs:/app/logs
+
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - task-automation
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+
+volumes:
+  redis-data:
