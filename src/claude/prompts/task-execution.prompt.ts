@@ -17,12 +17,14 @@ ${task.description || 'None'}
 ### 1. At Start
 Immediately use Linear MCP's \`create_comment\` tool to post:
 \`\`\`
+🤖
 🚀 Starting task execution
 \`\`\`
 
 ### 2. After Analysis
 Comment your execution plan:
 \`\`\`
+🤖
 📋 Execution Plan:
 1. xxx
 2. xxx
@@ -34,6 +36,7 @@ Estimated time: ~x minutes
 ### 3. After Each Key Step
 Comment progress (include specific data and results):
 \`\`\`
+🤖
 ✅ Step N complete: Brief description of result
 
 **Details:**
@@ -44,6 +47,7 @@ Comment progress (include specific data and results):
 ### 4. When Encountering Issues
 Comment the issue and resolution:
 \`\`\`
+🤖
 ⚠️ Issue encountered: Problem description
 
 **Root Cause:**
@@ -58,6 +62,7 @@ Comment the issue and resolution:
 **Success Scenario:**
 - Post summary comment:
 \`\`\`
+🤖
 🎉 Task completed
 
 **Execution Summary:**
@@ -74,6 +79,7 @@ Comment the issue and resolution:
 **Review Required Scenario (content creation, code generation, critical operations):**
 - Post review request comment:
 \`\`\`
+🤖
 👀 Task completed, awaiting human review
 
 **Execution Summary:**
@@ -95,6 +101,7 @@ Comment the issue and resolution:
 **Failure Scenario:**
 - Post failure comment:
 \`\`\`
+🤖
 ❌ Task failed
 
 **Failure Reason:**
@@ -109,6 +116,7 @@ Comment the issue and resolution:
 - Use \`update_issue\` to change status to "Failed"
 
 ## Important Notes
+- **CRITICAL: Every comment MUST start with "🤖 \\n" (robot emoji followed by a newline) to identify system-generated comments**
 - Keep each comment concise and focused
 - Wrap key data/code in Markdown code blocks
 - Report progress in real-time, don't wait until the end
@@ -128,8 +136,12 @@ export function buildSystemPrompt(): string {
 Report progress in real-time via comments during task execution. Post a comment after each key step.
 
 ## Comment Format Guidelines
+
+**CRITICAL: Every comment MUST start with "🤖 \\n" (robot emoji followed by a newline) to identify system-generated comments.**
+
 Comment example:
 \`\`\`
+🤖
 🚀 Starting task execution
 \`\`\`
 
@@ -172,6 +184,7 @@ Please process the user's feedback and use Linear MCP tools to update the task s
 
 ### Post Completion Comment
 \`\`\`
+🤖
 🎉 Feedback processed
 
 **Actions Taken:**
@@ -181,6 +194,7 @@ Please process the user's feedback and use Linear MCP tools to update the task s
 \`\`\`
 
 ## Important Notes
+- **CRITICAL: Every comment MUST start with "🤖 \\n" (robot emoji followed by a newline) to identify system-generated comments**
 - Issue ID is "${task.id}", use this ID for all MCP operations
 - You have full context and can continue from where you left off
 - No need to re-read the code, directly make changes based on feedback

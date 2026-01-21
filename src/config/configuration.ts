@@ -3,7 +3,6 @@ export default () => ({
     apiKey: process.env.LINEAR_API_KEY,
     teamId: process.env.LINEAR_TEAM_ID,
     workspace: process.env.LINEAR_WORKSPACE,
-    apiKeyName: process.env.LINEAR_API_KEY_NAME,
   },
   anthropic: {
     // Authentication method: 'api_key' (proxy) or 'login' (standard Anthropic)

@@ -71,10 +71,6 @@ export class SettingsProviderService {
     return this.getValue('linearWorkspace', 'linear.workspace');
   }
 
-  getLinearApiKeyName(): string | undefined {
-    return this.getValue('linearApiKeyName', 'linear.apiKeyName');
-  }
-
   // ==================== Workspace Settings ====================
 
   getWorkspacePath(): string | undefined {

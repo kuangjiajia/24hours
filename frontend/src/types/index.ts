@@ -147,7 +147,6 @@ export interface Settings {
   linearApiKey?: string;
   linearTeamId?: string;
   linearWorkspace?: string;
-  linearApiKeyName?: string;
 
   // Workspace settings
   workspacePath?: string;

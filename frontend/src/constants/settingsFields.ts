@@ -32,8 +32,8 @@ export const SETTINGS_FIELDS: SettingsFieldConfig[] = [
     type: 'dropdown',
     group: 'model',
     options: [
-      { value: 'api_key', label: 'API Key (Proxy)' },
-      { value: 'login', label: 'Login (Direct)' },
+      { value: 'api_key', label: 'AUTH TOKEN (Proxy)' },
+      { value: 'login', label: 'API Key (Direct)' },
     ],
   },
   {
@@ -107,14 +107,6 @@ export const SETTINGS_FIELDS: SettingsFieldConfig[] = [
     type: 'text',
     group: 'linear',
     placeholder: 'my-workspace',
-  },
-  {
-    key: 'linearApiKeyName',
-    label: 'API Key Name',
-    tooltip: 'A friendly name for this Linear API key (for reference only).',
-    type: 'text',
-    group: 'linear',
-    placeholder: 'My Linear Key',
   },
 
   // Workspace settings group

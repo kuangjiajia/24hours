@@ -35,6 +35,12 @@ export interface StatsEvent {
   queueLength: number;
 }
 
+export interface SessionMessageEvent {
+  sessionId: string;
+  message: unknown;
+  timestamp: Date;
+}
+
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -87,5 +93,41 @@ export class MonitorGateway
   @SubscribeMessage('unsubscribe:task')
   handleUnsubscribeTask(client: Socket, taskId: string) {
     client.leave(`task:${taskId}`);
+  }
+
+  /**
+   * Subscribe to session messages for real-time streaming
+   */
+  @SubscribeMessage('subscribe:session')
+  handleSubscribeSession(client: Socket, sessionId: string) {
+    client.join(`session:${sessionId}`);
+    this.logger.log(`Client ${client.id} subscribed to session ${sessionId}`);
+  }
+
+  /**
+   * Unsubscribe from session messages
+   */
+  @SubscribeMessage('unsubscribe:session')
+  handleUnsubscribeSession(client: Socket, sessionId: string) {
+    client.leave(`session:${sessionId}`);
+    this.logger.log(`Client ${client.id} unsubscribed from session ${sessionId}`);
+  }
+
+  /**
+   * Broadcast session message to subscribers
+   */
+  broadcastSessionMessage(data: SessionMessageEvent) {
+    this.server.to(`session:${data.sessionId}`).emit('session:message', data);
+  }
+
+  /**
+   * Broadcast session completion
+   */
+  broadcastSessionComplete(sessionId: string, success: boolean) {
+    this.server.to(`session:${sessionId}`).emit('session:complete', {
+      sessionId,
+      success,
+      timestamp: new Date(),
+    });
   }
 }

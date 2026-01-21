@@ -40,10 +40,6 @@ export class SettingsDto {
   @IsString()
   linearWorkspace?: string;
 
-  @IsOptional()
-  @IsString()
-  linearApiKeyName?: string;
-
   // Workspace settings
   @IsOptional()
   @IsString()

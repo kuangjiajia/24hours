@@ -9,6 +9,7 @@ import {
 } from './prompts/task-execution.prompt';
 import { ProgressCallback, TaskExecutionResult } from '../queue/task.interface';
 import { SettingsProviderService } from '../settings/settings-provider.service';
+import { MonitorGateway } from '../monitor/monitor.gateway';
 
 type AuthMethod = 'api_key' | 'login';
 
@@ -19,6 +20,7 @@ export class ClaudeService implements OnModuleInit {
   constructor(
     private settingsProvider: SettingsProviderService,
     private linearService: LinearService,
+    private monitorGateway: MonitorGateway,
   ) {}
 
   onModuleInit() {
@@ -50,6 +52,13 @@ export class ClaudeService implements OnModuleInit {
    */
   private getWorkspacePath(): string | undefined {
     return this.settingsProvider.getWorkspacePath();
+  }
+
+  /**
+   * Get model name from settings
+   */
+  private getModel(): 'opus' | 'sonnet' | 'haiku' {
+    return this.settingsProvider.getModel();
   }
 
   /**
@@ -121,7 +130,7 @@ export class ClaudeService implements OnModuleInit {
       const agentQuery = query({
         prompt: taskPrompt,
         options: {
-          model: 'claude-sonnet-4-5-20250929',
+          model: this.getModel(),
           systemPrompt,
           // Pass environment variables to Claude Code subprocess
           env: envVars,
@@ -131,14 +140,19 @@ export class ClaudeService implements OnModuleInit {
           permissionMode: 'bypassPermissions',
           allowDangerouslySkipPermissions: true,
           // MCP servers configuration for Linear integration
+          // Linear MCP uses OAuth 2.1 or Bearer token authentication
+          // Pass API key via --header flag for direct authentication
           mcpServers: {
             linear: {
               type: 'stdio',
               command: 'npx',
-              args: ['-y', 'mcp-remote', 'https://mcp.linear.app/mcp'],
-              env: {
-                LINEAR_API_KEY: this.settingsProvider.getLinearApiKey() || '',
-              },
+              args: [
+                '-y',
+                'mcp-remote',
+                'https://mcp.linear.app/mcp',
+                '--header',
+                `Authorization: Bearer ${this.settingsProvider.getLinearApiKey() || ''}`,
+              ],
             },
           },
         },
@@ -152,6 +166,15 @@ export class ClaudeService implements OnModuleInit {
 
       // Process streaming messages
       for await (const msg of agentQuery) {
+        // Broadcast message to WebSocket subscribers
+        if (sessionId) {
+          this.monitorGateway.broadcastSessionMessage({
+            sessionId,
+            message: msg,
+            timestamp: new Date(),
+          });
+        }
+
         this.processMessage(msg, task.id, callbacks, {
           onText: (text: string) => {
             responseText += text;
@@ -179,6 +202,11 @@ export class ClaudeService implements OnModuleInit {
       // Check for failure indicators in response
       const hasError =
         responseText.includes('❌') && responseText.includes('failed');
+
+      // Broadcast session completion
+      if (sessionId) {
+        this.monitorGateway.broadcastSessionComplete(sessionId, !hasError);
+      }
 
       if (hasError) {
         callbacks?.onProgress('❌ Task execution failed', 100);
@@ -328,7 +356,7 @@ export class ClaudeService implements OnModuleInit {
       const agentQuery = query({
         prompt: feedbackPrompt,
         options: {
-          model: 'claude-sonnet-4-5-20250929',
+          model: this.getModel(),
           // Resume the previous session
           resume: sessionId,
           // Pass environment variables to Claude Code subprocess
@@ -339,14 +367,19 @@ export class ClaudeService implements OnModuleInit {
           permissionMode: 'bypassPermissions',
           allowDangerouslySkipPermissions: true,
           // MCP servers configuration for Linear integration
+          // Linear MCP uses OAuth 2.1 or Bearer token authentication
+          // Pass API key via --header flag for direct authentication
           mcpServers: {
             linear: {
               type: 'stdio',
               command: 'npx',
-              args: ['-y', 'mcp-remote', 'https://mcp.linear.app/mcp'],
-              env: {
-                LINEAR_API_KEY: this.settingsProvider.getLinearApiKey() || '',
-              },
+              args: [
+                '-y',
+                'mcp-remote',
+                'https://mcp.linear.app/mcp',
+                '--header',
+                `Authorization: Bearer ${this.settingsProvider.getLinearApiKey() || ''}`,
+              ],
             },
           },
         },
@@ -360,6 +393,16 @@ export class ClaudeService implements OnModuleInit {
 
       // Process streaming messages
       for await (const msg of agentQuery) {
+        // Broadcast message to WebSocket subscribers
+        const currentSessionId = newSessionId || sessionId;
+        if (currentSessionId) {
+          this.monitorGateway.broadcastSessionMessage({
+            sessionId: currentSessionId,
+            message: msg,
+            timestamp: new Date(),
+          });
+        }
+
         this.processMessage(msg, task.id, callbacks, {
           onText: (text: string) => {
             responseText += text;
@@ -389,6 +432,12 @@ export class ClaudeService implements OnModuleInit {
       // Check for failure indicators in response
       const hasError =
         responseText.includes('❌') && responseText.includes('failed');
+
+      // Broadcast session completion
+      const finalSessionId = newSessionId || sessionId;
+      if (finalSessionId) {
+        this.monitorGateway.broadcastSessionComplete(finalSessionId, !hasError);
+      }
 
       if (hasError) {
         callbacks?.onProgress('❌ Feedback processing failed', 100);

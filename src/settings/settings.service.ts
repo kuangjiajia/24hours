@@ -26,6 +26,7 @@ export class SettingsService implements OnModuleInit {
   }
 
   private initializeSchema() {
+    if (!this.db) return;
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

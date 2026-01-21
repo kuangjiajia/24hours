@@ -13,7 +13,6 @@ const settingsConfig: Record<string, string> = {
   linearApiKey: 'linear.apiKey',
   linearTeamId: 'linear.teamId',
   linearWorkspace: 'linear.workspace',
-  linearApiKeyName: 'linear.apiKeyName',
   workspacePath: 'anthropic.workspacePath',
 };
 
@@ -84,7 +83,6 @@ export class SettingsController {
       linearApiKey: result.linearApiKey,
       linearTeamId: result.linearTeamId,
       linearWorkspace: result.linearWorkspace,
-      linearApiKeyName: result.linearApiKeyName,
       workspacePath: result.workspacePath,
     };
   }

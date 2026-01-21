@@ -41,10 +41,10 @@ export class TaskPollerService {
           continue;
         }
 
-        // Add initial comment
+        // Add initial comment (prefixed with 🤖 to identify system comments)
         await this.linearService.addComment(
           task.id,
-          '🚀 Task received by system, execution starting soon...',
+          '🤖 \nTask received by system, execution starting soon...',
         );
 
         // Add to queue

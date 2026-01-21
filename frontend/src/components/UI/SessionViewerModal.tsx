@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useSessionStream } from '../../hooks/useSessionStream';
+import { SessionChatMessage } from './SessionChatMessage';
 
 interface SessionViewerModalProps {
   isOpen: boolean;
@@ -6,39 +8,60 @@ interface SessionViewerModalProps {
   sessionId: string;
 }
 
+/**
+ * Loading dots animation component
+ */
+function LoadingDots() {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+      <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+      <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+    </div>
+  );
+}
+
+/**
+ * Live indicator component
+ */
+function LiveIndicator() {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="relative flex h-2.5 w-2.5">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+      </span>
+      <span className="text-green-400 text-xs font-medium uppercase tracking-wide">Live</span>
+    </div>
+  );
+}
+
 export function SessionViewerModal({
   isOpen,
   onClose,
   sessionId,
 }: SessionViewerModalProps) {
-  const [content, setContent] = useState<string>('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { messages, isLoading, isLive, error } = useSessionStream({
+    sessionId,
+    enabled: isOpen && !!sessionId,
+  });
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const previousOverflowRef = useRef<string | null>(null);
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (isOpen && sessionId) {
-      setLoading(true);
-      setError(null);
-
-      fetch(`/api/claude/sessions/${sessionId}/file`)
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error(`Failed to load session: ${res.status}`);
-          }
-          return res.text();
-        })
-        .then((data) => {
-          setContent(data);
-          setLoading(false);
-        })
-        .catch((err) => {
-          setError(err.message);
-          setLoading(false);
-        });
+    if (scrollContainerRef.current && messages.length > 0) {
+      const container = scrollContainerRef.current;
+      // Only auto-scroll if user is near the bottom
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      if (isNearBottom || isLive) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
-  }, [isOpen, sessionId]);
+  }, [messages, isLive]);
 
+  // Handle escape key and body overflow
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -72,14 +95,17 @@ export function SessionViewerModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-[#1e1e1e] border-2 border-void/30 rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-[#1e1e1e] border-2 border-void/30 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#252526] rounded-t-2xl">
-          <div className="flex items-center gap-3">
-            <span className="text-purple-400 text-lg">📄</span>
-            <h2 className="font-mono text-white text-sm">
-              Session: {sessionId}
-            </h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-purple-400 text-lg">💬</span>
+              <h2 className="font-mono text-white text-sm">
+                Session: {sessionId.slice(0, 8)}...
+              </h2>
+            </div>
+            {isLive && <LiveIndicator />}
           </div>
           <button
             onClick={onClose}
@@ -92,7 +118,7 @@ export function SessionViewerModal({
 
         {/* Content */}
         <div className="flex-1 overflow-hidden">
-          {loading ? (
+          {isLoading ? (
             <div className="h-full flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">
                 <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
@@ -107,10 +133,21 @@ export function SessionViewerModal({
               </div>
             </div>
           ) : (
-            <div className="h-full overflow-auto">
-              <pre className="p-4 font-mono text-xs leading-relaxed text-[#d4d4d4] whitespace-pre-wrap">
-                <code>{content}</code>
-              </pre>
+            <div
+              ref={scrollContainerRef}
+              className="h-full overflow-y-auto px-6 py-4 space-y-4"
+            >
+              {messages.map((msg) => (
+                <SessionChatMessage key={msg.id} message={msg} />
+              ))}
+
+              {/* Streaming indicator */}
+              {isLive && (
+                <div className="flex items-center gap-3 text-white/50 py-2">
+                  <LoadingDots />
+                  <span className="text-sm">Claude is working...</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -118,7 +155,7 @@ export function SessionViewerModal({
         {/* Footer */}
         <div className="px-6 py-3 border-t border-white/10 bg-[#252526] rounded-b-2xl flex items-center justify-between">
           <span className="text-white/40 font-mono text-xs">
-            {content ? `${content.split('\n').length} lines` : ''}
+            {messages.length > 0 ? `${messages.length} messages` : ''}
           </span>
           <button
             onClick={onClose}

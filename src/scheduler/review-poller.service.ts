@@ -11,16 +11,13 @@ import { TaskStatus } from '../linear/linear.types';
 export class ReviewPollerService {
   private readonly logger = new Logger(ReviewPollerService.name);
   private isPolling = false;
-  private readonly apiKeyName: string;
 
   constructor(
     private linearService: LinearService,
     private configService: ConfigService,
     private sessionStore: SessionStoreService,
     @InjectQueue('task-queue') private taskQueue: Queue,
-  ) {
-    this.apiKeyName = this.configService.get<string>('linear.apiKeyName') || '';
-  }
+  ) {}
 
   @Cron('*/30 * * * * *') // Every 30 seconds
   async pollReviewTasks() {
@@ -49,11 +46,11 @@ export class ReviewPollerService {
         // Get comments for this task
         const comments = await this.linearService.getComments(task.id);
 
-        // Filter: exclude system comments (by checking username)
+        // Filter: exclude system comments (by checking if comment starts with 🤖)
         // Filter: exclude already processed comments
         const newUserComments = comments.filter(
           (c) =>
-            c.user?.name !== this.apiKeyName &&
+            !c.body.startsWith('🤖 \n') &&
             !this.sessionStore.isCommentProcessed(c.id),
         );
 
